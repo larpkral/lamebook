@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lamebook – Log in or sign up</title>
+  <link rel="stylesheet" href="./css/login.css">
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Logo -->
+  <div>
+    <div class="logo-wrap">
+      <span class="logo-text logo-white">lame</span><span class="logo-text logo-blue">book</span>
+    </div>
+    <p class="logo-tagline">Connect with the people around you.</p>
+  </div>
+
+  <!-- Login card -->
+  <div class="login-card">
+    <h1 class="card-title">Welcome back</h1>
+    <p class="card-subtitle">Log in to your account to continue.</p>
+
+    <div id="login-error" class="error-msg"></div>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Email address</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
+      <button type="submit" class="btn-login" id="login-btn">Log in</button>
+    </form>
+
+    <div class="divider"><span>OR</span></div>
+
+    <button class="btn-signup" id="open-signup">Create an account</button>
+  </div>
+
+</div>
+
+<footer>
+  <a href="#">Privacy</a>·<a href="#">Terms</a>·<a href="#">Cookies</a>
+  <br style="margin-bottom:4px">
+  Lamebook © 2024
+</footer>
+
+<!-- Sign up modal -->
+<div class="modal-overlay" id="signup-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Create account</h2>
+        <p>It's quick and easy.</p>
+      </div>
+      <button class="modal-close" id="close-signup">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="signup-error" class="error-msg"></div>
+      <div id="signup-success" class="success-msg"></div>
+      <form id="signup-form">
+        <div class="name-row">
+          <input type="text" id="first-name" placeholder="First name" required>
+          <input type="text" id="last-name" placeholder="Last name" required>
+        </div>
+        <input type="email" id="signup-email" placeholder="Email address" required>
+        <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required minlength="6">
+
+        <label class="field-label">Date of birth</label>
+        <div class="birthday-row">
+          <select id="bday-day">
+            <option value="">Day</option>
+            <script>for(let i=1;i<=31;i++) document.write(`<option value="${i}">${i}</option>`)</script>
+          </select>
+          <select id="bday-month">
+            <option value="">Month</option>
+            <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+            <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+            <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+          <select id="bday-year">
+            <option value="">Year</option>
+            <script>for(let y=new Date().getFullYear()-13;y>=1905;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+          </select>
+        </div>
+
+        <label class="field-label">Gender</label>
+        <div class="gender-row">
+          <label class="gender-option"><span>Female</span><input type="radio" name="gender" value="Female"></label>
+          <label class="gender-option"><span>Male</span><input type="radio" name="gender" value="Male"></label>
+          <label class="gender-option"><span>Custom</span><input type="radio" name="gender" value="Custom"></label>
+        </div>
+
+        <p class="privacy-note">
+          By clicking Sign Up, you agree to our <a href="#">Terms</a>, <a href="#">Privacy Policy</a> and <a href="#">Cookies Policy</a>.
+        </p>
+        <button type="submit" class="btn-signup-modal" id="signup-btn">Sign Up</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot password modal -->
+<div class="modal-overlay" id="forgot-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Reset password</h2>
+        <p>We'll send a reset link to your email.</p>
+      </div>
+      <button class="modal-close" id="close-forgot">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="forgot-error" class="error-msg"></div>
+      <div id="forgot-success" class="success-msg"></div>
+      <form id="forgot-form">
+        <input type="email" id="forgot-email" placeholder="Email address" required style="margin-bottom:16px">
+        <button type="submit" class="btn-login">Send reset link</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { login, signup, getSession } from './js/auth.js';
+import { supabase } from './js/supabase.js';
+
+(async () => {
+  const session = await getSession();
+  if (session) window.location.href = './app.html#feed';
+})();
+
+// Login
+const loginForm  = document.getElementById('login-form');
+const loginError = document.getElementById('login-error');
+const loginBtn   = document.getElementById('login-btn');
+
+loginForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  loginError.classList.remove('show');
+  loginBtn.textContent = 'Logging in…';
+  loginBtn.disabled = true;
+  try {
+    await login(
+      document.getElementById('login-email').value.trim(),
+      document.getElementById('login-password').value
+    );
+    window.location.href = './app.html#feed';
+  } catch (err) {
+    loginError.textContent = err.message || 'Login failed. Please try again.';
+    loginError.classList.add('show');
+    loginBtn.textContent = 'Log in';
+    loginBtn.disabled = false;
+  }
+});
+
+// Signup modal
+document.getElementById('open-signup').addEventListener('click', () =>
+  document.getElementById('signup-overlay').classList.add('active'));
+document.getElementById('close-signup').addEventListener('click', () =>
+  document.getElementById('signup-overlay').classList.remove('active'));
+document.getElementById('signup-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+});
+
+const signupForm    = document.getElementById('signup-form');
+const signupError   = document.getElementById('signup-error');
+const signupSuccess = document.getElementById('signup-success');
+const signupBtn     = document.getElementById('signup-btn');
+
+signupForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  signupError.classList.remove('show');
+  signupSuccess.classList.remove('show');
+  signupBtn.textContent = 'Creating account…';
+  signupBtn.disabled = true;
+  try {
+    await signup(
+      document.getElementById('signup-email').value.trim(),
+      document.getElementById('signup-password').value,
+      document.getElementById('first-name').value.trim(),
+      document.getElementById('last-name').value.trim()
+    );
+    signupSuccess.textContent = 'Account created! Check your email to confirm, then log in.';
+    signupSuccess.classList.add('show');
+    signupForm.reset();
+  } catch (err) {
+    signupError.textContent = err.message || 'Signup failed. Please try again.';
+    signupError.classList.add('show');
+  } finally {
+    signupBtn.textContent = 'Sign Up';
+    signupBtn.disabled = false;
+  }
+});
+
+// Forgot password modal
+document.getElementById('forgot-link').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('forgot-overlay').classList.add('active');
+});
+document.getElementById('close-forgot').addEventListener('click', () =>
+  document.getElementById('forgot-overlay').classList.remove('active'));
+document.getElementById('forgot-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+});
+
+document.getElementById('forgot-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email  = document.getElementById('forgot-email').value.trim();
+  const errEl  = document.getElementById('forgot-error');
+  const sucEl  = document.getElementById('forgot-success');
+  errEl.classList.remove('show');
+  sucEl.classList.remove('show');
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/app.html'
+  });
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.classList.add('show');
+  } else {
+    sucEl.textContent = 'Reset link sent! Check your email.';
+    sucEl.classList.add('show');
+  }
+});
+</script>
+</body>
+</html>
